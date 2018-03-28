@@ -16,6 +16,9 @@ class CPU {
 
     // Special-purpose registers
     this.reg.PC = 0; // Program Counter
+
+    this.reg[7] = 0xF4;
+
   }
 
   /**
@@ -63,6 +66,14 @@ class CPU {
         this.reg[regA] = regA + regB
         console.log(this.reg[regA]);
         break;
+      case 'DEC':
+        this.reg[regA]--
+          // console.log(this.reg[regA]);
+          break;
+      case 'INC':
+        this.reg[regA]++
+          // console.log(this.reg[regA]);
+          break;
       default:
         console.log('def reached');
         break;
@@ -79,6 +90,10 @@ class CPU {
     const PRN = 0b01000011;
     const ADD = 0b10101000;
     const MUL = 0b10101010;
+    const DEC = 0b01111001;
+    const INC = 0b01111000;
+    const POP = 0b01001100;
+    const PUSH = 0b01001101;
 
     let IR = this.ram.read(this.reg.PC)
 
@@ -100,6 +115,25 @@ class CPU {
     let handleHLT = () => this.stopClock();
     let handleMUL = () => this.alu('MUL', this.reg[opA], this.reg[opB]);
     let handleADD = () => this.alu('ADD', this.reg[opA], this.reg[opB]);
+    let handleDEC = () => this.alu('DEC', this.reg[opA]);
+    let handleINC = () => this.alu('INC', this.reg[opA]);
+
+    // let SP = this.reg[7];
+    // console.log(this.reg[7])
+    let handlePUSH = () => {
+      this.reg[7]--;
+      this.ram.write(this.reg[7], this.reg[opA])
+    }
+
+    let handlePOP = () => {
+      let value = this.ram.read(this.reg[7])
+      this.reg[opA] = value;
+      this.reg[7]++;
+      // console.log(value)
+    }
+
+
+
 
     let table = {}
 
@@ -108,6 +142,10 @@ class CPU {
     table[PRN] = handlePRN;
     table[MUL] = handleMUL;
     table[ADD] = handleADD;
+    table[POP] = handlePOP;
+    table[PUSH] = handlePUSH;
+    table[DEC] = handleDEC;
+    table[INC] = handleINC;
 
     // Load the instruction register (IR--can just be a local variable here)
     // from the memory address pointed to by the PC. (I.e. the PC holds the
@@ -119,7 +157,6 @@ class CPU {
 
     // EXECUTE INSTRUCTIONS
     handler();
-
 
     // Increment the PC register to go to the next instruction. Instructions
     // can be 1, 2, or 3 bytes long. Hint: the high 2 bits of the
