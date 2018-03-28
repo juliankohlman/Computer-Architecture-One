@@ -54,9 +54,15 @@ class CPU {
    * op can be: ADD SUB MUL DIV INC DEC CMP
    */
   alu(op, regA, regB) {
+    let result = 0;
     switch (op) {
       case 'MUL':
-        return this.reg[regA] = (regA * regB);
+        // console.log(result);
+        this.reg[regA] = regA * regB
+        console.log(this.reg[regA]);
+        break;
+      default:
+        console.log('def reached');
         break;
     }
   }
@@ -82,7 +88,9 @@ class CPU {
     let handleLDI = () => this.reg[opA] = opB;
     let handlePRN = () => console.log(this.reg[opA]);
     let handleHLT = () => this.stopClock();
-    let handleMUL = () => this.alu(MUL, opA, opB);
+    // let handleMUL = () => console.log(this.reg[opA], this.reg[opB]);
+    let handleMUL = () => this.alu('MUL',this.reg[opA], this.reg[opB]);
+
     let table = {}
 
     table[LDI] = handleLDI;
@@ -92,26 +100,8 @@ class CPU {
 
     let handler = table[IR]; // add default unknown instruction msg.
 
-    handler();
     // EXECUTE INSTRUCTIONS
-    // switch (IR) {
-    //   case HLT:
-    //     this.stopClock();
-    //     break;
-
-    //   case LDI:
-    //     this.reg[opA] = opB;
-    //     break;
-
-    //   case PRN:
-    //     console.log(this.reg[opA]);
-    //     break;
-
-    //   default:
-    //     console.log("Unknown instruction: " + IR.toString(2));
-    //     this.stopClock();
-    //     break;
-    // }
+    handler();
 
     // INCREMENT PC REGISTER
     this.reg.PC += (IR >>> 6) + 1
@@ -123,7 +113,7 @@ class CPU {
     // !!! IMPLEMENT ME
 
     // Debugging output
-    console.log('4', `${this.reg.PC}: ${IR.toString(2)}`);
+    console.log(`${this.reg.PC}: ${IR.toString(2)}`);
 
     // Get the two bytes in memory _after_ the PC in case the instruction
     // needs them.
