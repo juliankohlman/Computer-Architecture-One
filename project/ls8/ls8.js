@@ -26,7 +26,7 @@ function loadMemory() {
     "10011001", // # LDI R1,9  Load R1 with value 9
     "00000001",
     "00001001",
-    "10101010", // # MUL R0,R1 Multiply R0*R1, storing result in R0
+    "10101000", // # MUL R0,R1 Multiply R0*R1, storing result in R0
     "00000000",
     "00000001",
     "01000011", // # PRN R0    Print value in R0

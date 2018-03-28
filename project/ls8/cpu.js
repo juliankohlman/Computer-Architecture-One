@@ -61,6 +61,11 @@ class CPU {
         this.reg[regA] = regA * regB
         console.log(this.reg[regA]);
         break;
+      case 'ADD':
+        // console.log(result);
+        this.reg[regA] = regA + regB
+        console.log(this.reg[regA]);
+        break;
       default:
         console.log('def reached');
         break;
@@ -88,8 +93,8 @@ class CPU {
     let handleLDI = () => this.reg[opA] = opB;
     let handlePRN = () => console.log(this.reg[opA]);
     let handleHLT = () => this.stopClock();
-    // let handleMUL = () => console.log(this.reg[opA], this.reg[opB]);
-    let handleMUL = () => this.alu('MUL',this.reg[opA], this.reg[opB]);
+    let handleMUL = () => this.alu('MUL', this.reg[opA], this.reg[opB]);
+    let handleADD = () => this.alu('ADD', this.reg[opA], this.reg[opB]);
 
     let table = {}
 
@@ -97,6 +102,7 @@ class CPU {
     table[HLT] = handleHLT;
     table[PRN] = handlePRN;
     table[MUL] = handleMUL;
+    table[ADD] = handleADD;
 
     let handler = table[IR]; // add default unknown instruction msg.
 
