@@ -54,15 +54,12 @@ class CPU {
    * op can be: ADD SUB MUL DIV INC DEC CMP
    */
   alu(op, regA, regB) {
-    let result = 0;
     switch (op) {
       case 'MUL':
-        // console.log(result);
         this.reg[regA] = regA * regB
         console.log(this.reg[regA]);
         break;
       case 'ADD':
-        // console.log(result);
         this.reg[regA] = regA + regB
         console.log(this.reg[regA]);
         break;
@@ -83,13 +80,21 @@ class CPU {
     const ADD = 0b10101000;
     const MUL = 0b10101010;
 
-    // IR >>> 6 + 1<-- for opcode
-    //           ^^ operands + 1 10 in binary is 2 | 2 + 1 = 3
     let IR = this.ram.read(this.reg.PC)
+
+    // Get the two bytes in memory _after_ the PC in case the instruction
+    // needs them.
+
+    // !!! IMPLEMENT ME
 
     let opA = this.ram.read(this.reg.PC + 1);
     let opB = this.ram.read(this.reg.PC + 2);
 
+    // instruction handlers
+    // Execute the instruction. Perform the actions for the instruction as
+    // outlined in the LS-8 spec.
+
+    // !!! IMPLEMENT ME
     let handleLDI = () => this.reg[opA] = opB;
     let handlePRN = () => console.log(this.reg[opA]);
     let handleHLT = () => this.stopClock();
@@ -104,33 +109,17 @@ class CPU {
     table[MUL] = handleMUL;
     table[ADD] = handleADD;
 
-    let handler = table[IR]; // add default unknown instruction msg.
-
-    // EXECUTE INSTRUCTIONS
-    handler();
-
-    // INCREMENT PC REGISTER
-    this.reg.PC += (IR >>> 6) + 1
-
     // Load the instruction register (IR--can just be a local variable here)
     // from the memory address pointed to by the PC. (I.e. the PC holds the
     // index into memory of the next instruction.)
 
     // !!! IMPLEMENT ME
 
-    // Debugging output
-    console.log(`${this.reg.PC}: ${IR.toString(2)}`);
+    let handler = table[IR] || console.log('Error: Unknown Instruction.');
 
-    // Get the two bytes in memory _after_ the PC in case the instruction
-    // needs them.
+    // EXECUTE INSTRUCTIONS
+    handler();
 
-    // !!! IMPLEMENT ME
-
-    // instruction handlers
-    // Execute the instruction. Perform the actions for the instruction as
-    // outlined in the LS-8 spec.
-
-    // !!! IMPLEMENT ME
 
     // Increment the PC register to go to the next instruction. Instructions
     // can be 1, 2, or 3 bytes long. Hint: the high 2 bits of the
@@ -138,6 +127,10 @@ class CPU {
     // for any particular instruction.
 
     // !!! IMPLEMENT ME
+    this.reg.PC += (IR >>> 6) + 1
+
+    // Debugging output
+    // console.log(`${this.reg.PC}: ${IR.toString(2)}`);
   }
 }
 
