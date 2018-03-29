@@ -269,3 +269,40 @@ the value is `undefined`, then you move the `PC` to the next instruction like
 normal. But if the value is a number, then you move the `PC` directly to that
 address.
 
+### (Stretch) Add interrupts to the LS-8 emulator
+
+You must have implmented the ST instruction before doing this.
+
+See the LS-8 spec for details on implementation.
+
+The LS-8 should fire a timer interrupt one time per second. This could be implemented with `setInterval()`, where the handler sets bit 0 of the IS register (R6). (This is in addition to the normal `tick()` timer you already have.)
+
+Later in the main instruction loop, you’ll check to see if bit 0 of the IS register is set, and if it is, you’ll push the registers on the stack, look up the interrupt handler address in the interrupt vector table at address `0xF8`, and set the PC to it. Execution continues in the interrupt handler.
+
+Then when an `IRET` instruction is found, the registers and PC are popped off the stack and execution continues normally.
+
+
+The assembly program is interested in getting timer interrupts, so it sets the IM register to 00000001 with LDI R5,1.
+
+The interrupt `setInterval()` timer fires and sets bit #0 in IS.
+
+At the beginning of `tick()`, the CPU checks to see if interrupts are enabled. If not, it continues processing instructions as normal. Otherwise:
+
+Bitwise-AND the IM register with the IS register. This masks out all the interrupts we're not interested in, leaving the ones we are interested in:
+
+```js
+let interrupts = this.reg[IM] & this.reg[IS];
+```
+Step through each bit of interrupts and see which interrupts are set.
+
+```js
+for (let i = 0; i < 8; i++) {
+  // Right shift interrupts down by i, then mask with 1 to see if that bit was set
+  let interruptHappened = ((interrupts >> i) & 1) == 1;
+
+  ...
+}
+```
+(If the no interrupt bits are set, then stop processing interrupts and continue executing the next instruction as per usual.)
+
+If `interruptHappened`, check the LS-8 spec for details on what to do.
