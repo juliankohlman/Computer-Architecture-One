@@ -5,6 +5,8 @@
 /**
  * Class for simulating a simple Computer (CPU & memory)
  */
+let SP = 7;
+
 class CPU {
   /**
    * Initialize the CPU
@@ -18,7 +20,6 @@ class CPU {
     this.reg.PC = 0; // Program Counter
 
     this.reg[7] = 0xF4;
-
   }
 
   /**
@@ -94,6 +95,8 @@ class CPU {
     const INC = 0b01111000;
     const POP = 0b01001100;
     const PUSH = 0b01001101;
+    const CALL = 0b01001000;
+    const RET = 0b00001001;
 
     let IR = this.ram.read(this.reg.PC)
 
@@ -111,22 +114,41 @@ class CPU {
 
     // !!! IMPLEMENT ME
     let handleLDI = () => this.reg[opA] = opB;
-    let handlePRN = () => console.log(this.reg[opA]);
+    let handlePRN = () => console.log(this.reg[opA])
     let handleHLT = () => this.stopClock();
     let handleMUL = () => this.alu('MUL', this.reg[opA], this.reg[opB]);
     let handleADD = () => this.alu('ADD', this.reg[opA], this.reg[opB]);
     let handleDEC = () => this.alu('DEC', this.reg[opA]);
     let handleINC = () => this.alu('INC', this.reg[opA]);
 
-    // console.log(this.reg[7])
-    let handlePUSH = () => {
-      this.reg[7]--;
-      this.poke(this.reg[7], this.reg[opA])
+    let handleCALL = () => {
+      this.reg[SP]--;
+      this.ram.write(this.reg[SP], this.reg.PC + 2);
+      this.reg.PC = this.reg[opA];
+    };
+
+    let handleRET = () => {
+      this.reg.PC = this.ram.read(this.reg[SP])
+      this.reg[SP]++;
     }
 
+    // console.log(this.reg[7])
+    // let pushHelper = () => {
+
+    // }
+
+    let handlePUSH = () => {
+      this.reg[SP]--;
+      this.poke(this.reg[SP], this.reg[opA])
+    }
+
+    // let popHelper = () => {
+
+    // }
+
     let handlePOP = () => {
-      this.reg[opA] = this.ram.read(this.reg[7])
-      this.reg[7]++;
+      this.reg[opA] = this.ram.read(this.reg[SP])
+      this.reg[SP]++;
       // console.log(value)
     }
 
@@ -141,6 +163,8 @@ class CPU {
     table[PUSH] = handlePUSH;
     table[DEC] = handleDEC;
     table[INC] = handleINC;
+    table[CALL] = handleCALL;
+    table[RET] = handleRET;
 
     // Load the instruction register (IR--can just be a local variable here)
     // from the memory address pointed to by the PC. (I.e. the PC holds the
@@ -159,7 +183,9 @@ class CPU {
     // for any particular instruction.
 
     // !!! IMPLEMENT ME
-    this.reg.PC += (IR >>> 6) + 1
+    if ((IR !== CALL) && (IR !== RET)) {
+      this.reg.PC += (IR >>> 6) + 1
+    }
 
     // Debugging output
     // console.log(`${this.reg.PC}: ${IR.toString(2)}`);
