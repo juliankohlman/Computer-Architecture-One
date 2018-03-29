@@ -118,22 +118,17 @@ class CPU {
     let handleDEC = () => this.alu('DEC', this.reg[opA]);
     let handleINC = () => this.alu('INC', this.reg[opA]);
 
-    // let SP = this.reg[7];
     // console.log(this.reg[7])
     let handlePUSH = () => {
       this.reg[7]--;
-      this.ram.write(this.reg[7], this.reg[opA])
+      this.poke(this.reg[7], this.reg[opA])
     }
 
     let handlePOP = () => {
-      let value = this.ram.read(this.reg[7])
-      this.reg[opA] = value;
+      this.reg[opA] = this.ram.read(this.reg[7])
       this.reg[7]++;
       // console.log(value)
     }
-
-
-
 
     let table = {}
 
