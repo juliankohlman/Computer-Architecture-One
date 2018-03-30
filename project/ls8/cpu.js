@@ -89,6 +89,12 @@ class CPU {
       case 'INC':
         this.reg[regA]++;
         break;
+        case 'CMP':
+          if (regA === regB) this.reg.FL = 0b00000001;
+          if (regA > regB) this.reg.FL = 0b00000001;
+          this.reg.FL = 0b00000100;
+          console.log(this.reg.FL);
+          break;
       default:
         console.log('def reached');
         break;
@@ -111,7 +117,7 @@ class CPU {
     let handleADD = () => this.alu('ADD', this.reg[opA], this.reg[opB]);
     let handleDEC = () => this.alu('DEC', this.reg[opA]);
     let handleINC = () => this.alu('INC', this.reg[opA]);
-    let handleCMP = () => this.alu('CMP', this.reg[opA], this.reg[opB]);
+    let handleCMP = () => this.alu('CMP', this.reg[opA], this.reg[opB])
     let handleCALL = () => {
       this.reg[SP]--;
       this.ram.write(this.reg[SP], this.reg.PC + 2);
@@ -158,7 +164,7 @@ class CPU {
     if (IR !== CALL && IR !== RET) this.reg.PC += (IR >>> 6) + 1;
 
     // Debugging output
-    console.log(`${this.reg.PC}: ${IR.toString(2)}`);
+    // console.log(`${this.reg.PC}: ${IR.toString(2)}`);
   }
 }
 
