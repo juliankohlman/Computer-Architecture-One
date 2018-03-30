@@ -1,3 +1,4 @@
+/* eslint semi: "error" */
 /**
  * LS-8 v2.0 emulator skeleton code
  */
@@ -19,6 +20,8 @@ class CPU {
     // Special-purpose registers
     this.reg.PC = 0; // Program Counter
 
+    this.reg.FL = 0b00000000;
+    //   ^LGE
     this.reg[7] = 0xF4;
   }
 
@@ -60,21 +63,21 @@ class CPU {
   alu(op, regA, regB) {
     switch (op) {
       case 'MUL':
-        this.reg[regA] = regA * regB
+        this.reg[regA] = regA * regB;
         console.log(this.reg[regA]);
         break;
       case 'ADD':
-        this.reg[regA] = regA + regB
+        this.reg[regA] = regA + regB;
         console.log(this.reg[regA]);
         break;
       case 'DEC':
-        this.reg[regA]--
-          // console.log(this.reg[regA]);
-          break;
+        this.reg[regA]--;
+        // console.log(this.reg[regA]);
+        break;
       case 'INC':
-        this.reg[regA]++
-          // console.log(this.reg[regA]);
-          break;
+        this.reg[regA]++;
+        // console.log(this.reg[regA]);
+        break;
       default:
         console.log('def reached');
         break;
@@ -97,8 +100,12 @@ class CPU {
     const PUSH = 0b01001101;
     const CALL = 0b01001000;
     const RET = 0b00001001;
+    const CMP = 0b10100000;
+    const JMP = 0b01010000;
+    const JEQ = 0b01010001;
+    const JNE = 0b01010010;
 
-    let IR = this.ram.read(this.reg.PC)
+    let IR = this.ram.read(this.reg.PC);
 
     // Get the two bytes in memory _after_ the PC in case the instruction
     // needs them.
@@ -114,12 +121,15 @@ class CPU {
 
     // !!! IMPLEMENT ME
     let handleLDI = () => this.reg[opA] = opB;
-    let handlePRN = () => console.log(this.reg[opA])
+    let handlePRN = () => console.log(this.reg[opA]);
     let handleHLT = () => this.stopClock();
     let handleMUL = () => this.alu('MUL', this.reg[opA], this.reg[opB]);
     let handleADD = () => this.alu('ADD', this.reg[opA], this.reg[opB]);
     let handleDEC = () => this.alu('DEC', this.reg[opA]);
     let handleINC = () => this.alu('INC', this.reg[opA]);
+    let handleCMP = () => this.alu('CMP', this.reg[opA], this.reg[opB]);
+
+
 
     let handleCALL = () => {
       this.reg[SP]--;
@@ -128,9 +138,9 @@ class CPU {
     };
 
     let handleRET = () => {
-      this.reg.PC = this.ram.read(this.reg[SP])
+      this.reg.PC = this.ram.read(this.reg[SP]);
       this.reg[SP]++;
-    }
+    };
 
     // console.log(this.reg[7])
     // let pushHelper = () => {
@@ -139,20 +149,20 @@ class CPU {
 
     let handlePUSH = () => {
       this.reg[SP]--;
-      this.poke(this.reg[SP], this.reg[opA])
-    }
+      this.poke(this.reg[SP], this.reg[opA]);
+    };
 
     // let popHelper = () => {
 
     // }
 
     let handlePOP = () => {
-      this.reg[opA] = this.ram.read(this.reg[SP])
+      this.reg[opA] = this.ram.read(this.reg[SP]);
       this.reg[SP]++;
       // console.log(value)
-    }
+    };
 
-    let table = {}
+    let table = {};
 
     table[LDI] = handleLDI;
     table[HLT] = handleHLT;
@@ -165,15 +175,18 @@ class CPU {
     table[INC] = handleINC;
     table[CALL] = handleCALL;
     table[RET] = handleRET;
-
+    table[CMP] = handleCMP;
+    table[JMP] = handleJMP;
+    table[JEQ] = handleJEQ;
+    table[JNE] = handleJNE;
     // Load the instruction register (IR--can just be a local variable here)
     // from the memory address pointed to by the PC. (I.e. the PC holds the
     // index into memory of the next instruction.)
 
     // !!! IMPLEMENT ME
 
-    let handler = table[IR] || console.log('Error: Unknown Instruction.');
-
+    let handler = table[IR] || console.log(`Error: Unknown Instruction | ${IR.toString(2)}`);
+    // console.log(table)
     // EXECUTE INSTRUCTIONS
     handler();
 
@@ -183,12 +196,11 @@ class CPU {
     // for any particular instruction.
 
     // !!! IMPLEMENT ME
-    if ((IR !== CALL) && (IR !== RET)) {
-      this.reg.PC += (IR >>> 6) + 1
-    }
+    // if (IR === JMP || IR === JNE || IR === JEQ) this.reg.PC = this.ram.read(this.reg[opA]);
+    if (IR !== CALL && IR !== RET) this.reg.PC += (IR >>> 6) + 1;
 
     // Debugging output
-    // console.log(`${this.reg.PC}: ${IR.toString(2)}`);
+    console.log(`${this.reg.PC}: ${IR.toString(2)}`);
   }
 }
 
