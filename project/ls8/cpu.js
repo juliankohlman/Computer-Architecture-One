@@ -21,6 +21,11 @@ const CMP = 0b10100000;
 const JMP = 0b01010000;
 const JEQ = 0b01010001;
 const JNE = 0b01010010;
+
+const E_FLAG = 0;
+const G_FLAG = 1;
+const L_FLAG = 2;
+
 let SP = 7;
 
 class CPU {
@@ -34,7 +39,7 @@ class CPU {
 
     // Special-purpose registers
     this.reg.PC = 0; // Program Counter
-    this.reg.FL = 0b00000000; // Flag
+    this.reg.FL = 0; // Flag
     this.reg[7] = 0xF4; // stack pointer
   }
 
@@ -63,6 +68,18 @@ class CPU {
     clearInterval(this.clock);
   }
 
+  setFlag(flag, val) {
+    if (val) {
+      this.reg.FL |= 1 << flag;
+    } else {
+      this.reg.FL &= ~(1 << flag);
+    }
+  }
+
+  getFlag(flag) {
+    return (this.reg.FL & (1 << flag)) >> flag;
+  }
+
   /**
    * ALU functionality
    *
@@ -89,12 +106,11 @@ class CPU {
       case 'INC':
         this.reg[regA]++;
         break;
-        case 'CMP':
-          if (regA === regB) this.reg.FL = 0b00000001;
-          if (regA > regB) this.reg.FL = 0b00000001;
-          this.reg.FL = 0b00000100;
-          console.log(this.reg.FL);
-          break;
+      case 'CMP':
+        this.setFlag(E_FLAG, regA === regB);
+        this.setFlag(G_FLAG, regA < regB);
+        this.setFlag(L_FLAG, regA > regB);
+        break;
       default:
         console.log('def reached');
         break;
@@ -109,6 +125,8 @@ class CPU {
     let opA = this.ram.read(this.reg.PC + 1);
     let opB = this.ram.read(this.reg.PC + 2);
 
+    let advancePC = true;
+
     // Handlers
     let handleLDI = () => this.reg[opA] = opB;
     let handlePRN = () => console.log(this.reg[opA]);
@@ -117,11 +135,30 @@ class CPU {
     let handleADD = () => this.alu('ADD', this.reg[opA], this.reg[opB]);
     let handleDEC = () => this.alu('DEC', this.reg[opA]);
     let handleINC = () => this.alu('INC', this.reg[opA]);
-    let handleCMP = () => this.alu('CMP', this.reg[opA], this.reg[opB])
+    let handleCMP = () => this.alu('CMP', this.reg[opA], this.reg[opB]);
     let handleCALL = () => {
       this.reg[SP]--;
       this.ram.write(this.reg[SP], this.reg.PC + 2);
       this.reg.PC = this.reg[opA];
+    };
+
+    let handleJMP = () => {
+      this.reg.PC = this.reg[opA];
+      advancePC = false;
+    };
+
+    let handleJEQ = () => {
+      if (this.getFlag(E_FLAG)) {
+        this.reg.PC = this.reg[opA];
+        advancePC = false;
+      }
+    };
+
+    let handleJNE = () => {
+      if (!this.getFlag(E_FLAG)) {
+        this.reg.PC = this.reg[opA];
+        advancePC = false;
+      }
     };
 
     let handleRET = () => {
@@ -152,16 +189,18 @@ class CPU {
       [CALL]: handleCALL,
       [RET]: handleRET,
       [CMP]: handleCMP,
-      // [JMP]: handleJMP,
-      // [JEQ]: handleJEQ,
-      // [JNE]: handleJNE
+      [JMP]: handleJMP,
+      [JEQ]: handleJEQ,
+      [JNE]: handleJNE
     };
 
     let handler = table[IR] || console.log(`Error: Unknown Instruction | ${IR.toString(2)}`);
 
     handler();
 
-    if (IR !== CALL && IR !== RET) this.reg.PC += (IR >>> 6) + 1;
+    if (advancePC) {
+      this.reg.PC += (IR >>> 6) + 1;
+    }
 
     // Debugging output
     // console.log(`${this.reg.PC}: ${IR.toString(2)}`);
